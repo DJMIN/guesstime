@@ -7,7 +7,14 @@
 更多详细可见 example.py 文件
 
 
+```shell script
+pip install guesstime
+
+```
 ```python
+
+from guesstime import GuessTime
+
 print(GuessTime("Wed Mar 16 01:33:53 +0000 2016").to_datetime())
 print(GuessTime("2021一月2hao").to_datetime())
 print(GuessTime("2021一月2hao18點").to_datetime())
