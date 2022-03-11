@@ -17,12 +17,13 @@ class GuessTime:
             time_any = time_any.__str__()
 
         if isinstance(time_any, str):
-            if re.findall(r'[\-\+][0-1][0-9]:00', time_any).__len__():
-                self.time_offset_hour = int(re.findall(r'([\-\+][0-1][0-9]):00', time_any)[0])
-                time_any = re.sub(r'[\-\+][0-1][0-9]:00', '', time_any)
+            if re.findall(r'[\-\+][0-1][0-9]:?00', time_any).__len__():
+                self.time_offset_hour = int(re.findall(r'([\-\+][0-1][0-9]):?00', time_any)[0])
+                time_any = re.sub(r'[\-\+][0-1][0-9]:?00', '', time_any)
             if cut_float and re.findall(r'\.[0-9]{3,6}', time_any).__len__():
                 self.time_float_str = re.findall(r'\.[0-9]{3,6}', time_any)[0]
                 time_any = re.sub(r'\.[0-9]{3,6}', '', time_any)
+            time_any = re.sub(r'[\.。|=\(\),、\?\\，!#%]', '/', time_any)
 
         self.time_any = time_any or datetime.datetime.now().__str__()
         # print(self.time_any)
@@ -31,13 +32,17 @@ class GuessTime:
         if self.time_offset_hour:
             self.res_time_int -= self.time_offset_hour * 3600
         self.res_time = float(str(self.res_time_int) + self.time_float_str)
-        self.res_time_datetime = arrow.get(self.res_time).datetime
+        self.res_time_arrow = arrow.get(self.res_time)
+        self.res_time_datetime = self.res_time_arrow.datetime
 
     def to_timestamp(self):
         return self.res_time
 
     def to_datetime(self):
         return self.res_time_datetime
+
+    def to_arrow(self):
+        return self.res_time_arrow
 
     def parse(self, string, **kwargs):
         """
