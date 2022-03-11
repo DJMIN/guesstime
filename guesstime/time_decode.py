@@ -70,7 +70,10 @@ __date__ = '18 Sep 2021'
 __version__ = '3.2.0'
 __description__ = 'Python 3 CLI Date Time Conversion Tool'
 
-print_error = partial(print, '解析时间过程中错误')
+# print_error = partial(print, '解析时间过程中错误')
+print_error = lambda *x: x
+
+
 
 class MemArgs:
     def __init__(self, timestamp=None, **kwargs):

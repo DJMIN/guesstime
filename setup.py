@@ -21,10 +21,12 @@ setup(
     url='https://github.com/DJMIN/dao',
     python_requires='>=3.5',
     install_requires=[
-       "requests",
-       "wrapt",
-       "wheel",
-       "twine",
-       "tqdm",
+        "wrapt",
+        "wheel",
+        "twine",
+        "pyunit-time",
+        "time-decode",
+        "python-dateutil",
+        "arrow",
     ],
 )
