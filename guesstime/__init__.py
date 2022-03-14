@@ -3,8 +3,8 @@ import arrow
 import re
 from .time_decode import MemArgs, TimeDecoder
 from .filters import solar_chinese_to_num
-import pyunit_time
-import pyunit_time.filters
+from . import pyunit_time
+from .pyunit_time import filters
 
 
 class GuessTime:
@@ -28,8 +28,8 @@ class GuessTime:
             time_any = re.sub(r'[.。|=,、?\\，!#%_\-—@]', '/', time_any)
             # print(pyunit_time.filters.filters_string(time_any, remove_re='`'))
             time_any = solar_chinese_to_num(time_any)  # 关于中文的十的转换为阿拉伯数字
-            time_any = pyunit_time.filters.symbol_replace(time_any)  # 符号替换
-            time_any = pyunit_time.filters.ten_to_number(time_any)  # 关于中文的十的转换为阿拉伯数字
+            time_any = filters.symbol_replace(time_any)  # 符号替换
+            time_any = filters.ten_to_number(time_any)  # 关于中文的十的转换为阿拉伯数字
             time_any = re.sub(r'[号月年（）(){}\[\]秒日點点时時分]$', '', time_any)
             time_any = re.sub(r'[号月年（）(){}\[\]]', '/', time_any)
             time_any = re.sub(r'[秒日]', ' ', time_any)

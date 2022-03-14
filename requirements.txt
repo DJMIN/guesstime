@@ -1,7 +1,7 @@
 wrapt
 wheel
 twine
-pyunit-time
+# pyunit-time
 python-dateutil
 # colorama
-arrow
+arrow~=1.2.2
