@@ -3,13 +3,20 @@
 
 from setuptools import setup, find_packages
 from version import __VERSION__
+
+with open('README.md', encoding='utf-8') as f:
+    long_text = f.read()
+
+with open('requirements.txt', encoding='utf-8') as f:
+    install_requires = f.read().strip().splitlines()
+
 setup(
     name='guesstime',
     version=__VERSION__,
     description=(
         'guesstime'
     ),
-    long_description=open('README.md').read(),
+    long_description=long_text,
     long_description_content_type="text/markdown",
     author='readerror',
     author_email='readerror@sina.com',
@@ -20,13 +27,5 @@ setup(
     platforms=["all"],
     url='https://github.com/DJMIN/dao',
     python_requires='>=3.5',
-    install_requires=[
-        "wrapt",
-        "wheel",
-        "twine",
-        "pyunit-time",
-        "time-decode",
-        "python-dateutil",
-        "arrow",
-    ],
+    install_requires=install_requires,
 )
