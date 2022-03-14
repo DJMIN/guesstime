@@ -5,6 +5,8 @@ from guesstime import GuessTime
 
 if __name__ == '__main__':
     print(GuessTime("Wed Mar 16 01:33:53 +0000 2016").to_datetime())
+    print(GuessTime("Wed Mar 16 01:33:53 +0000 2016").to_datetime_with_change_timezone())
+    print(GuessTime("Wed Mar 16 01:33:53 +0000 2016").to_date_str_with_change_timezone())
     print(GuessTime("2021一月一hao").to_datetime())
     print(GuessTime("2021一月2hao十八點").to_datetime())
     print(GuessTime("2021.10 12 5:08pm CNT").to_datetime())

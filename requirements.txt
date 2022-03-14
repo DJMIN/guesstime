@@ -5,3 +5,4 @@ twine
 python-dateutil
 # colorama
 arrow~=1.2.2
+pytz

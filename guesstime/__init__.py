@@ -1,4 +1,6 @@
 import datetime
+import time
+import pytz
 import arrow
 import re
 from .time_decode import MemArgs, TimeDecoder
@@ -69,8 +71,46 @@ class GuessTime:
     def to_datetime(self, default=None):
         return self.res_time_datetime or default
 
+    def to_datetime_with_change_timezone(
+            self, default=None, in_timezone="Europe/London", out_timezone='Asia/Shanghai'):
+        i_zone = pytz.timezone(in_timezone)
+        o_zone = pytz.timezone(out_timezone)
+        time_o = self.res_time_datetime or default
+        return time_o.replace(tzinfo=i_zone).astimezone(o_zone)
+
     def to_arrow(self, default=None):
         return self.res_time_arrow or default
+
+    def to_date_str(self, default=None, fmt="%Y-%m-%d %H:%M:%S"):
+        if fmt == 1:
+            fmt = '%Y-%m-%d %H:%M:%S %Z'
+        elif fmt == 2:
+            fmt = '%Y-%m-%d %H:%M:%S%z'
+        elif fmt == 3:
+            fmt = '%Y-%m-%dT%H:%M:%S.%f%z'
+        elif fmt == 4:
+            fmt = '%Y-%m-%d'
+        elif fmt == 5:
+            fmt = '%Y-%m-%d %H:%M:%S'
+        return time.strftime(fmt, time.localtime(self.res_time)) or default
+
+    def to_date_str_with_change_timezone(
+            self, default=None, in_timezone="Europe/London", out_timezone='Asia/Shanghai',
+            strftime='%Y-%m-%d %H:%M:%S %Z'):
+        if strftime == 1:
+            strftime = '%Y-%m-%d %H:%M:%S %Z'
+        elif strftime == 2:
+            strftime = '%Y-%m-%d %H:%M:%S%z'
+        elif strftime == 3:
+            strftime = '%Y-%m-%dT%H:%M:%S.%f%z'
+        elif strftime == 4:
+            strftime = '%Y-%m-%d'
+        elif strftime == 5:
+            strftime = '%Y-%m-%d %H:%M:%S'
+        i_zone = pytz.timezone(in_timezone)
+        o_zone = pytz.timezone(out_timezone)
+        time_o = self.res_time_datetime or default
+        return time_o.replace(tzinfo=i_zone).astimezone(o_zone).strftime(strftime)
 
     def to_guess_filter_string(self):
         return self.time_any
@@ -125,4 +165,5 @@ class GuessTime:
         :param string:
         :return: dict
         """
-        return self.__class__(arrow.get(pyunit_time.Time(self.res_time_datetime).parse(string=string, **kwargs)[0]['keyDate']).datetime)
+        return self.__class__(
+            arrow.get(pyunit_time.Time(self.res_time_datetime).parse(string=string, **kwargs)[0]['keyDate']).datetime)
