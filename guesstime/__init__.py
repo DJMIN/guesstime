@@ -7,12 +7,62 @@ from .time_decode import MemArgs, TimeDecoder
 from .filters import solar_chinese_to_num
 from . import pyunit_time
 from .pyunit_time import filters
+from dateutil import tz
+from dateutil.parser import parser
+
+
+def _build_tzaware(self, naive, res, tzinfos):
+    if callable(tzinfos) or (tzinfos and res.tzname in tzinfos):
+        tzinfo = self._build_tzinfo(tzinfos, res.tzname, res.tzoffset)
+        aware = naive.replace(tzinfo=tzinfo)
+        aware = self._assign_tzname(aware, res.tzname)
+
+    elif res.tzname and res.tzname in time.tzname:
+        aware = naive.replace(tzinfo=tz.tzlocal())
+
+        # Handle ambiguous local datetime
+        aware = self._assign_tzname(aware, res.tzname)
+
+        # This is mostly relevant for winter GMT zones parsed in the UK
+        if (aware.tzname() != res.tzname and
+                res.tzname in self.info.UTCZONE):
+            aware = aware.replace(tzinfo=tz.UTC)
+
+    elif res.tzoffset == 0:
+        aware = naive.replace(tzinfo=tz.UTC)
+
+    elif res.tzoffset:
+        aware = naive.replace(tzinfo=tz.tzoffset(res.tzname, res.tzoffset))
+
+    elif not res.tzname and not res.tzoffset:
+        # i.e. no timezone information was found.
+        aware = naive
+
+    elif res.tzname:
+        # tz-like string was parsed but we don't know what to do
+        # with it
+        # warnings.warn("tzname {tzname} identified but not understood.  "
+        #               "Pass `tzinfos` argument in order to correctly "
+        #               "return a timezone-aware datetime.  In a future "
+        #               "version, this will raise an "
+        #               "exception.".format(tzname=res.tzname),
+        #               category=UnknownTimezoneWarning)
+        aware = naive
+    else:
+        raise ValueError('aware is None')
+
+    return aware
+
+
+parser._build_tzaware = _build_tzaware
 
 
 class GuessTime:
     def __init__(self, time_any=None, cut_float=True, raise_err=True):
         self.time_offset_hour = 0
         self.time_float_str = ''
+        if not time_any:
+            time_any = time.time()
         if isinstance(time_any, (int, float)):
             if time_any > 100000000000:
                 time_any /= 1000
@@ -61,6 +111,16 @@ class GuessTime:
                 self.res_time = None
                 self.res_time_arrow = None
                 self.res_time_datetime = None
+
+    def offset(self, seconds=None, minutes=None, hours=None):
+        res_int = self.res_time_int
+        if seconds:
+            res_int = res_int+seconds
+        if minutes:
+            res_int = res_int+(minutes*60)
+        if hours:
+            res_int = res_int+(hours*3600)
+        return self.__class__(res_int)
 
     def to_timestamp_int(self, default=None):
         return self.res_time_int or default

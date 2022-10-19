@@ -14,10 +14,13 @@ pip install guesstime
 ```python
 
 from guesstime import GuessTime
-
+print(GuessTime("Wed Mar 16 01:33:53 +0000 2016").offset(seconds=-60).to_datetime())
 print(GuessTime("Wed Mar 16 01:33:53 +0000 2016").to_datetime())
-print(GuessTime("2021一月2hao").to_datetime())
-print(GuessTime("2021一月2hao18點").to_datetime())
+print(GuessTime("Wed Mar 16 01:33:53 +0000 2016").to_datetime_with_change_timezone())
+print(GuessTime("Wed Mar 16 01:33:53 +0000 2016").to_date_str_with_change_timezone())
+print(GuessTime("Wed Mar 16 01:33:53 +0000 2016").to_date_str())
+print(GuessTime("2021一月一hao").to_datetime())
+print(GuessTime("2021一月2hao十八點").to_datetime())
 print(GuessTime("2021.10 12 5:08pm CNT").to_datetime())
 print(GuessTime("2021。10 12 5:08pm CNT").to_datetime())
 print(GuessTime("2021/March.2 5:08pm CNT").to_datetime())
@@ -31,7 +34,7 @@ print(GuessTime(datetime.datetime.now()).to_timestamp())
 print(GuessTime(datetime.date.today()).to_timestamp())
 print(GuessTime("2022-03-11 18:14:27.913229 -08:00").to_datetime())
 print(GuessTime("2022-03-11 18:14:27.913229-08:00").to_timestamp())
-print(GuessTime(datetime.datetime.now()).to_timestamp())
+print(GuessTime(datetime.datetime.now()).to_timestamp_int())
 print(GuessTime("2022-03-11 18:14:27.913229 -08:00").parse('这个月的第三个星期天').to_datetime())
 print(GuessTime("2022-03-11 18:14:27.913229 -08:00").parse('今年的大寒').to_datetime())
 print(GuessTime("2022-03-11 18:14:27.913229 -08:00").parse('今天中午十二点').to_datetime())
@@ -44,8 +47,12 @@ print(GuessTime("Wed 000 2016", raise_err=False).to_guess_filter_string())
 
 上面每一行的输出结果
 ```txt
+2016-03-16 01:32:53+00:00
 2016-03-16 01:33:53+00:00
-2021-01-02 00:00:00+00:00
+2016-03-16 09:34:53+08:00
+2016-03-16 09:34:53 CST
+2016-03-16 09:33:53
+2021-01-01 00:00:00+00:00
 2021-01-02 18:00:00+00:00
 2021-10-12 17:08:00+00:00
 2021-10-12 17:08:00+00:00
@@ -55,18 +62,18 @@ print(GuessTime("Wed 000 2016", raise_err=False).to_guess_filter_string())
 2021-10-12 17:08:00+00:00
 2021-03-10 17:08:00+00:00
 2021-03-10T17:08:00+00:00
-2022-03-11 12:44:32.526116+00:00
-1647031472.530518
-1646956800.0
+2022-10-19 11:01:25.299943+00:00
+1666206085.301369
+1666137600.0
 2022-03-12 02:14:27.913229+00:00
 1647051267.913229
-1647031472
-2022-03-20 02:14:27+00:00
+1666206085
+2022-03-27 02:14:27+00:00
 2023-01-20 02:14:27+00:00
 2022-03-12 12:14:27+00:00
 2022-03-12 20:14:27+00:00
 5
 20
-2022-03-11 20:44:32.620318
+2022-10-19 19:01:25.333361
 Wed 000 2016
 ```
