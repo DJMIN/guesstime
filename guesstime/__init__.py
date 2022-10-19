@@ -210,7 +210,10 @@ class GuessTime:
         return self.res_time_datetime or default
 
     def to_datetime_with_change_timezone(
-            self, default=None, in_timezone="Europe/London", out_timezone='Asia/Shanghai'):
+            self, default=None,
+            in_timezone="UTC",
+            # in_timezone="Europe/London",
+            out_timezone='Asia/Shanghai'):
         i_zone = pytz.timezone(in_timezone)
         o_zone = pytz.timezone(out_timezone)
         time_o = self.res_time_datetime or default
@@ -233,7 +236,10 @@ class GuessTime:
         return time.strftime(fmt, time.localtime(self.res_time)) or default
 
     def to_date_str_with_change_timezone(
-            self, default=None, in_timezone="Europe/London", out_timezone='Asia/Shanghai',
+            self, default=None,
+            in_timezone="UTC",
+            # in_timezone="Europe/London",
+            out_timezone='Asia/Shanghai',
             strftime='%Y-%m-%d %H:%M:%S %Z'):
         if strftime == 1:
             strftime = '%Y-%m-%d %H:%M:%S %Z'
