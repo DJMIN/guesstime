@@ -1,5 +1,8 @@
 import datetime
 import time
+
+import dateutil
+import dateutil.relativedelta
 import pytz
 import arrow
 import re
@@ -9,6 +12,7 @@ from . import pyunit_time
 from .pyunit_time import filters
 from dateutil import tz
 from dateutil.parser import parser
+from typing import Any, Union
 
 
 def _build_tzaware(self, naive, res, tzinfos):
@@ -63,7 +67,7 @@ class GuessTime:
         self.time_float_str = ''
         if not time_any:
             time_any = time.time()
-        if isinstance(time_any, (int, float)):
+        if isinstance(time_any, (int, float, arrow.Arrow)):
             if time_any > 100000000000:
                 time_any /= 1000
             time_any = arrow.get(time_any).datetime.__str__()
@@ -112,15 +116,89 @@ class GuessTime:
                 self.res_time_arrow = None
                 self.res_time_datetime = None
 
-    def offset(self, seconds=None, minutes=None, hours=None):
-        res_int = self.res_time_int
+    def __add__(self, other: Any) -> "GuessTime":
+        if isinstance(other, (datetime.timedelta, dateutil.relativedelta.relativedelta)):
+            res = type(self)(self.res_time_arrow.fromdatetime(
+                self.res_time_datetime + other, self.res_time_datetime.tzinfo))
+        # elif isinstance(other, datetime.timedelta):
+        #     res = type(self)(self.res_time_datetime + other)
+        elif isinstance(other, (int, float)):
+            res = type(self)(self.res_time + other)
+        else:
+            res = NotImplemented
+        return res
+
+    def __radd__(self, other: Any) -> "GuessTime":
+        return self.__add__(other)
+
+    def __sub__(self, other: Any) -> Union[datetime.timedelta, "GuessTime"]:
+        if isinstance(other, (datetime.timedelta, dateutil.relativedelta.relativedelta)):
+            res = type(self)(self.res_time_arrow.fromdatetime(self.res_time_datetime - other, self.res_time_datetime.tzinfo))
+        elif isinstance(other, str):
+            res = self.res_time_datetime - type(self)(other).res_time_datetime
+        elif isinstance(other, type(self)):
+            res = self.res_time_datetime - other.res_time_datetime
+        elif isinstance(other, datetime.datetime):
+            res = self.res_time_datetime - other
+        elif isinstance(other, arrow.Arrow):
+            res = self.res_time_datetime - getattr(other, '_datetime')
+        elif isinstance(other, (int, float)):
+            res = type(self)(self.res_time - other)
+        else:
+            res = NotImplemented
+        return res
+
+    def __rsub__(self, other: Any) -> datetime.timedelta:
+        if isinstance(other, datetime.datetime):
+            res = other - self.res_time_datetime
+        elif isinstance(other, (int, float)):
+            res = datetime.timedelta(other - self.res_time)
+        elif isinstance(other, str):
+            res = type(self)(other).res_time_datetime - self.res_time_datetime
+        elif isinstance(other, arrow.Arrow):
+            res = getattr(other, '_datetime') - self.res_time_datetime
+        elif isinstance(other, type(self)):
+            res = other.res_time_datetime - self.res_time_datetime
+        else:
+            res = NotImplemented
+        return res
+
+    # comparisons
+
+    def __eq__(self, other: Any) -> bool:
+        return self.res_time_datetime == type(self)(other).res_time_datetime
+
+    def __ne__(self, other: Any) -> bool:
+        return not self.__eq__(other)
+
+    def __gt__(self, other: Any) -> bool:
+        return self.res_time_datetime > type(self)(other).res_time_datetime
+
+    def __ge__(self, other: Any) -> bool:
+        return self.res_time_datetime >= type(self)(other).res_time_datetime
+
+    def __lt__(self, other: Any) -> bool:
+
+        return self.res_time_datetime < type(self)(other).res_time_datetime
+
+    def __le__(self, other: Any) -> bool:
+        return self.res_time_datetime <= type(self)(other).res_time_datetime
+
+    def offset(self, seconds=None, minutes=None, hours=None, days=None):
+        res = self.res_time
         if seconds:
-            res_int = res_int+seconds
+            res = res + seconds
         if minutes:
-            res_int = res_int+(minutes*60)
+            res = res + (minutes * 60)
         if hours:
-            res_int = res_int+(hours*3600)
-        return self.__class__(res_int)
+            res = res + (hours * 3600)
+        if days:
+            res = res + (days * 86400)
+        return self.__class__(res)
+
+    def offset_datatime(self, timedelta: datetime.timedelta):
+        res = self.res_time_datetime + timedelta
+        return self.__class__(res)
 
     def to_timestamp_int(self, default=None):
         return self.res_time_int or default
