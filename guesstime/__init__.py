@@ -13,6 +13,7 @@ from .pyunit_time import filters
 from dateutil import tz
 from dateutil.parser import parser
 from typing import Any, Union
+from dateutil.relativedelta import relativedelta
 
 
 def _build_tzaware(self, naive, res, tzinfos):
@@ -67,7 +68,9 @@ class GuessTime:
         self.time_float_str = ''
         if not time_any:
             time_any = time.time()
-        if isinstance(time_any, (int, float, arrow.Arrow)):
+        if isinstance(time_any, arrow.Arrow):
+            time_any = time_any.datetime.__str__()
+        elif isinstance(time_any, (int, float)):
             if time_any > 100000000000:
                 time_any /= 1000
             time_any = arrow.get(time_any).datetime.__str__()
@@ -75,9 +78,9 @@ class GuessTime:
             time_any = time_any.__str__()
 
         if isinstance(time_any, str):
-            if re.findall(r'[\-\+][0-1][0-9]:?00', time_any).__len__():
-                self.time_offset_hour = int(re.findall(r'([\-\+][0-1][0-9]):?00', time_any)[0])
-                time_any = re.sub(r'[\-\+][0-1][0-9]:?00', '', time_any)
+            if re.findall(r'[\-+][0-1][0-9]:?00', time_any).__len__():
+                self.time_offset_hour = int(re.findall(r'([\-+][0-1][0-9]):?00', time_any)[0])
+                time_any = re.sub(r'[\-+][0-1][0-9]:?00', '', time_any)
             if cut_float and re.findall(r'\.[0-9]{3,6}', time_any).__len__():
                 self.time_float_str = re.findall(r'\.[0-9]{3,6}', time_any)[0]
                 time_any = re.sub(r'\.[0-9]{3,6}', '', time_any)
@@ -133,7 +136,8 @@ class GuessTime:
 
     def __sub__(self, other: Any) -> Union[datetime.timedelta, "GuessTime"]:
         if isinstance(other, (datetime.timedelta, dateutil.relativedelta.relativedelta)):
-            res = type(self)(self.res_time_arrow.fromdatetime(self.res_time_datetime - other, self.res_time_datetime.tzinfo))
+            res = type(self)(
+                self.res_time_arrow.fromdatetime(self.res_time_datetime - other, self.res_time_datetime.tzinfo))
         elif isinstance(other, str):
             res = self.res_time_datetime - type(self)(other).res_time_datetime
         elif isinstance(other, type(self)):
@@ -184,19 +188,95 @@ class GuessTime:
     def __le__(self, other: Any) -> bool:
         return self.res_time_datetime <= type(self)(other).res_time_datetime
 
-    def offset(self, seconds=None, minutes=None, hours=None, days=None):
-        res = self.res_time
-        if seconds:
-            res = res + seconds
-        if minutes:
-            res = res + (minutes * 60)
-        if hours:
-            res = res + (hours * 3600)
-        if days:
-            res = res + (days * 86400)
+    def offset(self, years=0, months=0, days=0, leapdays=0, weeks=0,
+               hours=0, minutes=0, seconds=0, microseconds=0,
+               year=None, month=None, day=None, weekday=None,
+               yearday=None, nlyearday=None,
+               hour=None, minute=None, second=None, microsecond=None):
+        """
+            relativedelta 类型旨在应用于现有的日期时间和
+            可以替换该日期时间的特定组件，或表示一个间隔
+            的时间。
+            它基于 M.-A 所做的出色工作的规范。伦堡在他的
+            `mx.DateTime <https://www.egenix.com/products/python/mxBase/mxDateTime/>`_ 扩展名。
+
+            年、月、日、时、分、秒、微秒：
+                绝对信息（参数是单数）；添加或减去一个
+                具有绝对信息的 relativedelta 不执行算术运算
+                操作，而是替换相应的值
+                具有 relativedelta 中的值的原始日期时间。
+
+            年、月、周、日、小时、分钟、秒、微秒：
+                相对信息，可能是负面的（参数是复数）；添加
+                或用相对信息减去 relativedelta 执行
+                对原始日期时间值的相应算术运算
+                使用 relativedelta 中的信息。
+
+            weekday 工作日：
+                可用的工作日实例之一（MO、TU 等）
+                相对增量模块。这些实例可能会收到一个参数 N，
+                指定第 N 个工作日，可以是正数或负数
+                （如 MO (+1) 或 MO (-2)）。不指定它与指定相同
+                +1。您也可以使用整数，其中 0=MO。这种说法总是
+                相对的，例如如果计算的日期已经是星期一，则使用 MO (1)
+                或 MO (-1) 不会改变这一天。为了有效地使其绝对化，请使用
+                它与 day 参数结合使用（例如 day=1, MO (1) for first
+                每月的星期一）。
+
+            leapdays 闰日：
+                如果年份是闰年，则将给定的日期添加到找到的日期
+                年，找到的日期是 2 月 28 日。
+
+            yearday, nlyearday 闰年日，非闰年日：
+                设置闰年日，非闰年日（跳跃闰日）。
+                这些将转换为日day / 月month / 闰日leapdays信息。
+
+            关键字有相对形式和绝对形式论据。复数是相对的，单数是
+            绝对。对于以下顺序中的每个参数，绝对形式
+            首先应用（通过将每个属性设置为该值）和
+            然后是相对形式（通过将值添加到属性）。
+
+            当这个 relativedelta 是时考虑的属性顺序
+            添加到日期时间的是：
+
+            1 年
+            2 个月
+            3. 天
+            4 个小时
+            5 分钟
+            6. 秒
+            7. 微秒
+
+            最后，使用上述规则应用工作日。
+
+            例如
+
+            >>> from datetime import datetime
+            >>> from dateutil.relativedelta import relativedelta, MO
+            >>> dt = datetime(2018, 4, 9, 13, 37, 0)
+            >>> delta = relativedelta(hours=25, day=1, weekday=MO(1))
+            >>> dt + delta
+            datetime.datetime(2018, 4, 2, 14, 37)
+
+            首先，将天设置为 1（每月的第一天），然后设置为 25 小时
+            添加，到第 2 天和第 14 小时，最后
+            应用了工作日，但由于第 2 天已经是星期一，因此
+            没有效果。
+        """
+        # res = self.res_time
+        # if seconds:
+        #     res = res + seconds
+        # if minutes:
+        #     res = res + (minutes * 60)
+        # if hours:
+        #     res = res + (hours * 3600)
+        # if days:
+        #     res = res + (days * 86400)
+        # if months:
+        res = (self + relativedelta(**{k:v for k,v in locals().items() if k != 'self'})).res_time
         return self.__class__(res)
 
-    def offset_datatime(self, timedelta: datetime.timedelta):
+    def offset_timedelta(self, timedelta: datetime.timedelta):
         res = self.res_time_datetime + timedelta
         return self.__class__(res)
 
