@@ -1,10 +1,10 @@
 # guesstime
 
-尝试处理各种 时间字符串、datetieme、int等等 返回给你 标准unix时间戳 int类型 或者 datetime类型 或者 arrow类型
+尝试处理各种 时间字符串、datetieme、int、中文、24节气等等 返回给你 标准unix时间戳 int类型 或者 datetime类型 或者 arrow类型
 
-使用了4个python时间处理库， 有更多格式，请联系我加上
+使用了4个python纯离线时间处理库， 如有更多格式，请联系我加上处理
 
-更多详细可见 example.py 文件
+更多详细使用可见 example.py 文件
 
 
 ```shell script
