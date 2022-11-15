@@ -64,11 +64,14 @@ parser._build_tzaware = _build_tzaware
 
 class GuessTime:
     def __init__(self, time_any=None, cut_float=True, raise_err=True):
+        self.time_any = None
         self.time_offset_hour = 0
         self.time_float_str = ''
         if not time_any:
             time_any = time.time()
-        if isinstance(time_any, arrow.Arrow):
+        if isinstance(time_any, self.__class__):
+            time_any = time_any.time_any
+        elif isinstance(time_any, arrow.Arrow):
             time_any = time_any.datetime.__str__()
         elif isinstance(time_any, (int, float)):
             if time_any > 100000000000:
@@ -298,6 +301,12 @@ class GuessTime:
         o_zone = pytz.timezone(out_timezone)
         time_o = self.res_time_datetime or default
         return time_o.replace(tzinfo=i_zone).astimezone(o_zone)
+
+    def to_timedelta(self):
+        return datetime.timedelta(seconds=self.res_time)
+
+    def to_timedelta_str(self):
+        return datetime.timedelta(seconds=self.res_time).__str__()
 
     def to_arrow(self, default=None):
         return self.res_time_arrow or default
